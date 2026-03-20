@@ -1,9 +1,11 @@
 """Verification route — supports both real JWT tokens and sandbox test tokens."""
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Request
 
@@ -25,6 +27,7 @@ from ..services.risk import DEFAULT_THRESHOLDS
 from ..services.verification import verification_service
 from ..utils.crypto import hash_payload
 
+logger = logging.getLogger(__name__)
 router = APIRouter(tags=["verify"])
 
 
@@ -68,16 +71,20 @@ async def _sandbox_verify(tenant_id: str, body: VerifyRequest) -> dict:
     token_data = SANDBOX_TOKENS.get(body.signed_token)
     delegation = resolve_sandbox_delegation_for_agent(agent_id) if agent else None
 
-    # Check revocations
-    agent_revoked = await cache.exists(f"kya:revoked:agent:{agent_id}")
-    deleg_revoked = False
-    if delegation:
-        deleg_revoked = await cache.exists(f"kya:revoked:delegation:{delegation['delegation_id']}")
+    # Check revocations in parallel
+    async def _false():
+        return False
+
+    agent_revoked, deleg_revoked, token_revoked = await asyncio.gather(
+        cache.exists(f"kya:revoked:agent:{agent_id}"),
+        cache.exists(f"kya:revoked:delegation:{delegation['delegation_id']}") if delegation else _false(),
+        cache.exists(f"kya:revoked:token:{body.signed_token}"),
+    )
 
     revocations = {
         "agent_revoked": agent_revoked,
         "delegation_revoked": deleg_revoked,
-        "token_revoked": await cache.exists(f"kya:revoked:token:{body.signed_token}"),
+        "token_revoked": token_revoked,
     }
 
     # Compute payload hash (for sandbox, the token "knows" the action hash)
@@ -172,7 +179,7 @@ async def _sandbox_verify(tenant_id: str, body: VerifyRequest) -> dict:
         resp["challenge_id"] = challenge_id
         resp["challenge_type"] = "push_notification"
         resp["poll_url"] = f"/v1/stepup/{challenge_id}/status"
-        resp["expires_at"] = (now + __import__('datetime').timedelta(seconds=300)).isoformat() + "Z"
+        resp["expires_at"] = (now + timedelta(seconds=300)).isoformat() + "Z"
         # Create a real challenge in the DB for polling
         from ..services.stepup import stepup_service
         try:
@@ -184,7 +191,7 @@ async def _sandbox_verify(tenant_id: str, body: VerifyRequest) -> dict:
                 action_payload=body.action_payload,
             )
         except Exception:
-            pass
+            logger.warning("Failed to create step-up challenge for sandbox token %s", body.signed_token, exc_info=True)
 
     elif outcome == "deny":
         resp["denial_reason"] = result.get("deny_reason")
@@ -202,6 +209,6 @@ async def _sandbox_verify(tenant_id: str, body: VerifyRequest) -> dict:
             request_payload=body.action_payload,
         )
     except Exception:
-        pass
+        logger.warning("Failed to write audit log for sandbox verification", exc_info=True)
 
     return resp

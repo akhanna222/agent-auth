@@ -211,9 +211,13 @@ def get_sandbox_token(token_str: str) -> dict | None:
     return SANDBOX_TOKENS.get(token_str)
 
 
+# Reverse index: agent_id → delegation (O(1) lookup)
+_AGENT_TO_DELEGATION = {d["agent_id"]: d for d in SANDBOX_DELEGATIONS.values()}
+
+# Pre-computed creation timestamp for sandbox entities
+SANDBOX_CREATED_AT = datetime.now(timezone.utc).isoformat()
+
+
 def resolve_sandbox_delegation_for_agent(agent_id: str) -> dict | None:
     """Find the delegation for a given sandbox agent."""
-    for d in SANDBOX_DELEGATIONS.values():
-        if d["agent_id"] == agent_id:
-            return d
-    return None
+    return _AGENT_TO_DELEGATION.get(agent_id)

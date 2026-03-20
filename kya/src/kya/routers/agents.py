@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 import time
-import uuid
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
-from ..sandbox import SANDBOX_AGENTS, get_sandbox_agent, wrap_response
+from ..sandbox import SANDBOX_AGENTS, SANDBOX_CREATED_AT, get_sandbox_agent, wrap_response
 from ..schemas.api.agents import AgentRegisterRequest, AgentRegisterResponse, AgentSummary
 from ..services.identity import identity_service
 
@@ -52,7 +50,7 @@ async def list_agents(request: Request):
             if agent_id not in existing_ids:
                 result.append({
                     **agent_data,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": SANDBOX_CREATED_AT,
                 })
 
     # Return flat for UI, wrapped for MPGS (check Accept header or just return list)
@@ -69,7 +67,7 @@ async def get_agent(request: Request, agent_id: str):
     if sandbox_agent:
         data = {
             **sandbox_agent,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": SANDBOX_CREATED_AT,
         }
         return wrap_response(data, request_id, start_time)
 

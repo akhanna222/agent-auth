@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -38,7 +39,7 @@ async def revoke_agent(request: Request, agent_id: str, body: RevokeRequest):
             "revoked": True,
             "propagation_ms": propagation_ms,
             "cascaded_to": [],
-            "revoked_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+            "revoked_at": datetime.now(timezone.utc).isoformat(),
         }
         return wrap_response(data, request_id, start_time)
 

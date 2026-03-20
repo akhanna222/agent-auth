@@ -1,9 +1,12 @@
 """Delegation routes."""
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, HTTPException, Request
 
 from ..dependencies import get_platform_keys
+from ..sandbox import get_sandbox_delegation, wrap_response
 from ..schemas.api.delegations import (
     AgentDelegationRequest,
     AgentDelegationResponse,
@@ -104,8 +107,6 @@ async def list_delegations(request: Request):
 
 @router.get("/{delegation_id}")
 async def get_delegation_detail(request: Request, delegation_id: str):
-    import time
-    from ..sandbox import get_sandbox_delegation, wrap_response
     start_time = time.time()
     request_id = getattr(request.state, "request_id", None)
 
