@@ -50,6 +50,62 @@ AI agents increasingly need to perform real actions: process payments, send mess
 | **Step-Up Service** | Challenge/response for high-risk actions |
 | **Audit Service** | Hash-chained append-only log with chain verification |
 
+## Delegation Flows
+
+KYA supports two delegation models that feed into the same verification pipeline.
+
+### Human → Agent
+
+A human grants scoped permissions to an agent:
+
+```bash
+POST /v1/delegations
+```
+```json
+{
+  "agent_id": "agt_001",
+  "granted_scopes": {
+    "allowed_actions": ["payment.create"],
+    "max_amount_usd": 1000,
+    "require_step_up_above_usd": 500
+  },
+  "expires_in_seconds": 3600
+}
+```
+
+The agent can then request intent tokens and act within those scopes. If the action exceeds `require_step_up_above_usd`, a step-up challenge is sent back to the human for approval.
+
+### Agent → Agent
+
+A parent agent delegates a subset of its permissions to a child agent:
+
+```bash
+POST /v1/delegations/agent-to-agent
+```
+```json
+{
+  "parent_agent_id": "agt_001",
+  "child_agent_id": "agt_002",
+  "scopes": {
+    "allowed_actions": ["payment.create"],
+    "max_amount_usd": 500
+  },
+  "expires_in_seconds": 1800
+}
+```
+
+### Delegation Safeguards
+
+| Rule | Enforcement |
+|---|---|
+| **Scope contraction** | Child scopes must be a subset of parent — child can never exceed parent |
+| **Depth limit** | Max 3 levels of delegation chain (DB constraint) |
+| **Self-delegation blocked** | `parent_agent_id != child_agent_id` (DB constraint) |
+| **Cascade revocation** | Revoking a parent cascades to all child delegations and tokens |
+| **Amount ceiling** | Child `max_amount_usd` must be ≤ parent `max_amount_usd` |
+
+Both paths converge at `/v1/verify-agent-action` — the policy engine checks the full delegation chain regardless of whether the original grant came from a human or another agent.
+
 ## Quick Start
 
 ### Prerequisites
@@ -153,6 +209,14 @@ All endpoints require `X-Tenant-ID` header (or `Authorization: Bearer <api-key>`
 | `GET` | `/v1/audit/agent/{id}/timeline` | Agent-specific timeline |
 | `GET` | `/v1/audit/verify-chain` | Verify audit chain integrity |
 | `GET` | `/v1/audit/decisions` | Query by decision type |
+
+## Mastercard MPGS — Agentic Payments
+
+KYA integrates with Mastercard Payment Gateway Services to authorize AI agent-initiated payments in real time. See the full guide:
+
+**[KYA × Mastercard MPGS — Agentic Payments](docs/KYA_Agentic_Payments_Mastercard.md)**
+
+Covers real-world scenarios (invoice payments, cardholder assistants, agent-to-agent orchestration), the MPGS pre-auth integration, step-up flow, risk scoring, denial codes, and a production rollout plan.
 
 ## Sandbox / MPGS Integration
 
