@@ -78,7 +78,8 @@ async def test_full_verification_allow(client):
         headers=HEADERS,
     )
     assert resp.status_code == 200
-    data = resp.json()
+    body = resp.json()
+    data = body.get("data", body)
     assert data["decision"] == "allow"
     assert data["is_authorized"] is True
 
@@ -103,5 +104,6 @@ async def test_full_verification_deny_revoked(client):
         },
         headers=HEADERS,
     )
-    data = resp.json()
+    body = resp.json()
+    data = body.get("data", body)
     assert data["decision"] == "deny"

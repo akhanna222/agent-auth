@@ -78,7 +78,7 @@ async def create_pre_auth(request: Request, body: PreAuthRequest):
 async def list_delegations(request: Request):
     tenant_id = request.state.tenant_id
     delegations = await delegation_service.list_delegations(tenant_id)
-    return [
+    result = [
         {
             "delegation_id": d.delegation_id,
             "agent_id": d.agent_id,
@@ -90,3 +90,41 @@ async def list_delegations(request: Request):
         }
         for d in delegations
     ]
+
+    # Include sandbox delegations for mastercard-sandbox tenant
+    if tenant_id == "mastercard-sandbox":
+        from ..sandbox import SANDBOX_DELEGATIONS
+        existing_ids = {d["delegation_id"] for d in result}
+        for deleg_id, deleg_data in SANDBOX_DELEGATIONS.items():
+            if deleg_id not in existing_ids:
+                result.append(deleg_data)
+
+    return result
+
+
+@router.get("/{delegation_id}")
+async def get_delegation_detail(request: Request, delegation_id: str):
+    import time
+    from ..sandbox import get_sandbox_delegation, wrap_response
+    start_time = time.time()
+    request_id = getattr(request.state, "request_id", None)
+
+    # Check sandbox delegations first
+    sandbox_deleg = get_sandbox_delegation(delegation_id)
+    if sandbox_deleg:
+        return wrap_response(sandbox_deleg, request_id, start_time)
+
+    deleg = await delegation_service.get_delegation(delegation_id)
+    if not deleg:
+        raise HTTPException(status_code=404, detail="Delegation not found")
+
+    data = {
+        "delegation_id": deleg.delegation_id,
+        "agent_id": deleg.agent_id,
+        "delegation_type": deleg.delegation_type,
+        "status": deleg.status,
+        "granted_scopes": deleg.granted_scopes,
+        "issued_at": deleg.issued_at.isoformat(),
+        "expires_at": deleg.expires_at.isoformat(),
+    }
+    return wrap_response(data, request_id, start_time)

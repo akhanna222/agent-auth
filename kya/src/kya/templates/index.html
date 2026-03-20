@@ -635,14 +635,15 @@
                 }
                 if (!signedToken) throw { detail: 'No signed token available. Issue a token first.' };
 
-                const data = await api('POST', '/v1/verify-agent-action', {
+                const resp = await api('POST', '/v1/verify-agent-action', {
                     agent_id: document.getElementById('verify-agent').value,
                     signed_token: signedToken,
                     action: document.getElementById('verify-action').value,
                     action_payload: payload,
                     request_context: { ip_address: '127.0.0.1' }
                 });
-                showResult('verify-result', data, data.decision === 'allow');
+                const data = resp.data || resp;
+                showResult('verify-result', resp, data.decision === 'allow');
             } catch (e) { showResult('verify-result', e, false); }
         }
 
@@ -652,11 +653,11 @@
                 const type = document.getElementById('revoke-type').value;
                 const id = document.getElementById('revoke-id').value;
                 if (!id) throw { detail: 'Target ID is required' };
-                const data = await api('POST', `/v1/revoke/${type}/${id}`, {
+                const resp = await api('POST', `/v1/revoke/${type}/${id}`, {
                     reason: document.getElementById('revoke-reason').value,
                     notes: document.getElementById('revoke-notes').value || null,
                 });
-                showResult('revoke-result', data);
+                showResult('revoke-result', resp);
             } catch (e) { showResult('revoke-result', e, false); }
         }
 
@@ -665,8 +666,8 @@
             try {
                 const id = document.getElementById('stepup-id').value;
                 if (!id) throw { detail: 'Challenge ID required' };
-                const data = await api('GET', `/v1/stepup/${id}/status`);
-                showResult('stepup-result', data);
+                const resp = await api('GET', `/v1/stepup/${id}/status`);
+                showResult('stepup-result', resp);
             } catch (e) { showResult('stepup-result', e, false); }
         }
 
@@ -674,10 +675,10 @@
             try {
                 const id = document.getElementById('stepup-id').value;
                 if (!id) throw { detail: 'Challenge ID required' };
-                const data = await api('POST', `/v1/stepup/${id}/respond`, {
+                const resp = await api('POST', `/v1/stepup/${id}/respond`, {
                     decision: document.getElementById('stepup-decision').value,
                 });
-                showResult('stepup-result', data);
+                showResult('stepup-result', resp);
             } catch (e) { showResult('stepup-result', e, false); }
         }
 
@@ -707,8 +708,9 @@
 
         async function verifyChain() {
             try {
-                const data = await api('GET', '/v1/audit/verify-chain');
-                showResult('audit-chain-result', data, data.is_valid);
+                const resp = await api('GET', '/v1/audit/verify-chain');
+                const chainData = resp.data || resp;
+                showResult('audit-chain-result', resp, chainData.is_valid);
             } catch (e) { showResult('audit-chain-result', e, false); }
         }
 

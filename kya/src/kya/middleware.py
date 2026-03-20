@@ -39,6 +39,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         tenant_id = request.headers.get("X-Tenant-ID")
+
+        # Support API key auth: resolve tenant from API key if no X-Tenant-ID
+        if not tenant_id:
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                api_key = auth_header[7:]
+                from .sandbox import SANDBOX_API_KEYS
+                tenant_id = SANDBOX_API_KEYS.get(api_key)
+
         if not tenant_id:
             return JSONResponse(
                 status_code=403,
