@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: kya_dev
+      POSTGRES_USER: kya_app
+      POSTGRES_PASSWORD: kya_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  opa:
+    image: openpolicyagent/opa:latest
+    command: run --server --addr :8181 /policies
+    volumes:
+      - ./opa/policies:/policies
+    ports:
+      - "8181:8181"
+
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://kya_app:kya_secret@db:5432/kya_dev
+      REDIS_URL: redis://redis:6379
+      OPA_URL: http://opa:8181
+      USE_INMEMORY_CACHE: "false"
+      USE_BUILTIN_POLICY: "false"
+    depends_on:
+      - db
+      - redis
+      - opa
+
+volumes:
+  postgres_data:
