@@ -1,0 +1,739 @@
+{
+  "info": {
+    "name": "KYA × Mastercard MPGS — Sandbox Collection",
+    "description": "Complete Postman collection for testing KYA (Know Your Agent) integration with Mastercard MPGS. All requests pre-configured for the sandbox environment. Run the 'Quickstart' folder first to verify connectivity.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",  "value": "https://sandbox.kya.moofwd.io/v1", "type": "string" },
+    { "key": "api_key",   "value": "kya_sandbox_mc_test_4f8a2b1c9d",   "type": "string" },
+    { "key": "tenant_id", "value": "mastercard-sandbox",                "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{api_key}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "00 — Quickstart (run first)",
+      "description": "Verify sandbox is reachable and credentials work. Run all three in order.",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/../health/ready",
+            "header": [
+              { "key": "X-Tenant-ID", "value": "{{tenant_id}}" }
+            ]
+          },
+          "response": [],
+          "_postman_previewlanguage": "json",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Health check passes', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.status).to.equal('healthy');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify sandbox agent exists",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/agents/agt_mc_test_001",
+            "header": [
+              { "key": "X-Tenant-ID",    "value": "{{tenant_id}}" },
+              { "key": "Authorization",  "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",   "value": "req_quickstart_001" }
+            ]
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Agent exists and is active', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.status).to.equal('active');",
+                  "  pm.expect(d.trust_tier).to.equal('verified');",
+                  "  console.log('Agent:', d.display_name, '| Trust:', d.trust_tier);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "First verification call — expect ALLOW",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",   "value": "application/json" },
+              { "key": "X-Tenant-ID",    "value": "{{tenant_id}}" },
+              { "key": "Authorization",  "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",   "value": "req_quickstart_002" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_allow_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 1200,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\",\n    \"invoice_ref\": \"INV-SANDBOX-001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Decision is ALLOW', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('allow');",
+                  "  pm.expect(d.is_agent_valid).to.be.true;",
+                  "  pm.expect(d.is_authorized).to.be.true;",
+                  "  pm.expect(d.risk_score).to.be.below(30);",
+                  "  console.log('Decision:', d.decision, '| Risk:', d.risk_score, '| Latency:', pm.response.responseTime + 'ms');",
+                  "  pm.collectionVariables.set('last_decision_id', d.decision_id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "01 — Verify agent action (all scenarios)",
+      "description": "Complete test matrix for POST /v1/verify-agent-action. Each request tests one specific scenario. Run in sequence.",
+      "item": [
+        {
+          "name": "ALLOW — normal payment $1,200",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_allow_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_allow_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 1200,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\",\n    \"invoice_ref\": \"INV-SANDBOX-001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 — allow",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"is_agent_valid\": true,\n    \"is_authorized\": true,\n    \"risk_score\": 7,\n    \"decision\": \"allow\",\n    \"decision_id\": \"dec_sandbox_abc123\",\n    \"constraints_verified\": {\n      \"amount_within_limit\": true,\n      \"delegation_active\": true,\n      \"token_valid\": true,\n      \"time_window_valid\": true\n    },\n    \"processed_at\": \"2025-01-07T14:00:00.067Z\"\n  },\n  \"meta\": {\n    \"request_id\": \"req_allow_001\",\n    \"latency_ms\": 67,\n    \"version\": \"1.0\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ALLOW — status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('ALLOW — decision correct', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('allow');",
+                  "  pm.expect(d.risk_score).to.be.below(30);",
+                  "  pm.expect(d.is_authorized).to.be.true;",
+                  "});",
+                  "pm.test('ALLOW — latency under 100ms', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(100);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "STEP-UP — amount $7,500 exceeds threshold",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_stepup_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_stepup_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 7500,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_002\",\n    \"invoice_ref\": \"INV-SANDBOX-LARGE-001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 — step_up",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"is_agent_valid\": true,\n    \"is_authorized\": false,\n    \"risk_score\": 18,\n    \"decision\": \"step_up\",\n    \"decision_id\": \"dec_sandbox_stepup_001\",\n    \"challenge_id\": \"chal_sandbox_xyz\",\n    \"challenge_type\": \"push_notification\",\n    \"poll_url\": \"https://sandbox.kya.moofwd.io/v1/stepup/chal_sandbox_xyz/status\",\n    \"expires_at\": \"2025-01-07T14:05:00Z\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('STEP-UP — decision correct', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('step_up');",
+                  "  pm.expect(d.challenge_id).to.be.a('string');",
+                  "  pm.expect(d.poll_url).to.include('/stepup/');",
+                  "  pm.collectionVariables.set('challenge_id', d.challenge_id);",
+                  "  pm.collectionVariables.set('poll_url', d.poll_url);",
+                  "  console.log('Challenge ID:', d.challenge_id);",
+                  "  console.log('Poll URL:', d.poll_url);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DENY — revoked agent",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_deny_revoked_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_revoked\",\n  \"signed_token\": \"tok_mc_any_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 500,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.99\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "200 — deny AGENT_REVOKED",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"data\": {\n    \"is_agent_valid\": false,\n    \"is_authorized\": false,\n    \"risk_score\": 100,\n    \"decision\": \"deny\",\n    \"decision_id\": \"dec_sandbox_deny_001\",\n    \"denial_reason\": \"AGENT_REVOKED\"\n  }\n}"
+            }
+          ],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DENY — AGENT_REVOKED', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(d.denial_reason).to.equal('AGENT_REVOKED');",
+                  "  pm.expect(d.risk_score).to.equal(100);",
+                  "  pm.expect(d.is_agent_valid).to.be.false;",
+                  "});",
+                  "pm.test('DENY — fast response (Redis only)', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(25);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DENY — amount exceeds delegation limit",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_deny_limit_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_002\",\n  \"signed_token\": \"tok_mc_overlimit_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 800,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\",\n    \"invoice_ref\": \"INV-SANDBOX-OVER-001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DENY — AMOUNT_EXCEEDS_LIMIT', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(d.denial_reason).to.equal('AMOUNT_EXCEEDS_LIMIT');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DENY — token replay attack",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_deny_replay_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_used_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 500,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DENY — TOKEN_ALREADY_USED (replay blocked)', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(d.denial_reason).to.equal('TOKEN_ALREADY_USED');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DENY — action not permitted",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_deny_action_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_refund_sandbox\",\n  \"action\": \"payment.refund\",\n  \"action_payload\": {\n    \"amount_usd\": 500,\n    \"currency\": \"USD\",\n    \"original_transaction_id\": \"txn_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DENY — ACTION_EXPLICITLY_DENIED', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(['ACTION_NOT_PERMITTED','ACTION_EXPLICITLY_DENIED']).to.include(d.denial_reason);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "DENY — outside time window (weekend)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_deny_time_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"tok_mc_weekend_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 1000,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"2025-01-11T15:00:00Z\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('DENY — OUTSIDE_TIME_WINDOW', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(d.denial_reason).to.equal('OUTSIDE_TIME_WINDOW');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "02 — Step-up challenge flow",
+      "description": "After receiving step_up from verify-agent-action, use these to poll and resolve the challenge. Run after the STEP-UP scenario in folder 01.",
+      "item": [
+        {
+          "name": "Poll step-up status (pending)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/stepup/{{challenge_id}}/status",
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_poll_001" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Poll returns valid status', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(['pending','approved','rejected','expired']).to.include(d.status);",
+                  "  console.log('Challenge status:', d.status);",
+                  "  if(d.status === 'approved') {",
+                  "    pm.collectionVariables.set('upgraded_token', d.upgraded_token);",
+                  "    console.log('Upgraded token received — proceed with payment');",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Resolve step-up — APPROVE (sandbox simulation)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/stepup/{{challenge_id}}/respond",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_stepup_approve_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"approve\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Step-up approved', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.status).to.equal('approved');",
+                  "  pm.expect(d.upgraded_token).to.be.a('string');",
+                  "  pm.collectionVariables.set('upgraded_token', d.upgraded_token);",
+                  "  console.log('Upgraded token:', d.upgraded_token.substring(0,20) + '...');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Verify with upgraded token — expect ALLOW",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_stepup_verify_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_001\",\n  \"signed_token\": \"{{upgraded_token}}\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 7500,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_002\",\n    \"invoice_ref\": \"INV-SANDBOX-LARGE-001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Upgraded token gives ALLOW', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('allow');",
+                  "  console.log('Full step-up flow complete — €7,500 payment authorised');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Resolve step-up — REJECT",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/stepup/chal_sandbox_reject_test/respond",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_stepup_reject_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"decision\": \"reject\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Step-up rejected — token revoked', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.status).to.equal('rejected');",
+                  "  pm.expect(d.upgraded_token).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "03 — Revocation (kill switch)",
+      "description": "Test the instant revocation flow. Warning: revocation in sandbox is real but sandbox agents auto-reset every 24 hours.",
+      "item": [
+        {
+          "name": "Verify before revocation — expect ALLOW",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_pre_revoke_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_003\",\n  \"signed_token\": \"tok_mc_fraud_allow_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 200,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Pre-revoke: ALLOW', () => {",
+                  "  pm.expect(pm.response.json().data.decision).to.equal('allow');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Revoke agent — instant kill switch",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/revoke/agent/agt_mc_test_003",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_revoke_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"SECURITY_INCIDENT\",\n  \"notes\": \"Sandbox revocation test\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Revocation confirmed', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.revoked).to.be.true;",
+                  "  pm.expect(d.propagation_ms).to.be.below(10);",
+                  "  console.log('Revocation propagation time:', d.propagation_ms + 'ms');",
+                  "  console.log('Cascaded to:', d.cascaded_to);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Verify after revocation — expect DENY (< 15ms)",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/verify-agent-action",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" },
+              { "key": "X-Request-ID",  "value": "req_post_revoke_001" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"agent_id\": \"agt_mc_test_003\",\n  \"signed_token\": \"tok_mc_fraud_allow_sandbox\",\n  \"action\": \"payment.create\",\n  \"action_payload\": {\n    \"amount_usd\": 200,\n    \"currency\": \"USD\",\n    \"merchant_id\": \"MCH_TEST_001\"\n  },\n  \"request_context\": {\n    \"ip_address\": \"203.0.113.1\",\n    \"user_agent\": \"MPGS-Gateway/4.1\",\n    \"timestamp\": \"{{$isoTimestamp}}\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Post-revoke: DENY immediately', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.decision).to.equal('deny');",
+                  "  pm.expect(d.denial_reason).to.equal('AGENT_REVOKED');",
+                  "});",
+                  "pm.test('Post-revoke: response under 15ms (Redis only)', () => {",
+                  "  pm.expect(pm.response.responseTime).to.be.below(15);",
+                  "  console.log('Revocation response time:', pm.response.responseTime + 'ms');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "04 — Audit log",
+      "description": "Query the immutable audit log for agent activity and chain verification.",
+      "item": [
+        {
+          "name": "Get agent audit timeline",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/audit/agent/agt_mc_test_001/timeline",
+              "query": [
+                { "key": "limit", "value": "20" }
+              ]
+            },
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Audit timeline returned', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.events).to.be.an('array');",
+                  "  console.log('Audit events:', d.events.length);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Verify audit chain integrity",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/audit/verify-chain",
+              "query": [
+                { "key": "tenant_id", "value": "mastercard-sandbox" }
+              ]
+            },
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ]
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Audit chain is valid', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.is_valid).to.be.true;",
+                  "  pm.expect(d.broken_at_sequence).to.be.null;",
+                  "  console.log('Chain valid:', d.is_valid, '| Entries checked:', d.entries_checked);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "05 — Agent & delegation info (read-only)",
+      "description": "Read-only endpoints for Mastercard to inspect registered agents and delegations.",
+      "item": [
+        {
+          "name": "Get agent details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/agents/agt_mc_test_001",
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ]
+          }
+        },
+        {
+          "name": "List all sandbox agents",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/agents",
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ]
+          }
+        },
+        {
+          "name": "Get delegation details",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/delegations/del_mc_test_001",
+            "header": [
+              { "key": "X-Tenant-ID",   "value": "{{tenant_id}}" },
+              { "key": "Authorization", "value": "Bearer {{api_key}}" }
+            ]
+          }
+        }
+      ]
+    }
+
+  ]
+}
