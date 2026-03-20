@@ -13,6 +13,21 @@ AI agents increasingly need to perform real actions: process payments, send mess
 - **Compliance & audit** — Every authorization decision is logged in a hash-chained, tamper-evident audit trail that can be independently verified.
 - **Multi-tenant SaaS** — Each tenant gets isolated agents, delegations, and audit logs with per-endpoint rate limiting.
 
+## UI Preview
+
+KYA ships with a built-in dark-themed dashboard at `/ui` — no separate frontend needed.
+
+### Dashboard — System Overview & Audit Trail
+![KYA Dashboard](docs/images/kya-dashboard.svg)
+
+### Agent Management — Registration & Inventory
+![KYA Agents](docs/images/kya-agents.svg)
+
+### Verification — Real-Time Action Authorization
+![KYA Verify](docs/images/kya-verify.svg)
+
+> **8 pages total:** Dashboard, Agents, Delegations, Intent Tokens, Verify Action, Revocation, Step-Up, Audit Log. Access at `http://localhost:8000/ui` after starting the server.
+
 ## Architecture
 
 ```

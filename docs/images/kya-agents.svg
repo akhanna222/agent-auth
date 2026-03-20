@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="620" viewBox="0 0 960 620">
+  <defs>
+    <style>
+      text { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="620" fill="#0f1117" rx="8"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="960" height="48" fill="#1a1d27" rx="8"/>
+  <rect x="0" y="40" width="960" height="8" fill="#1a1d27"/>
+  <line x1="0" y1="48" x2="960" y2="48" stroke="#2e3348" stroke-width="1"/>
+  <text x="28" y="30" fill="#a29bfe" font-size="16" font-weight="700">KYA</text>
+  <text x="62" y="30" fill="#e1e4ed" font-size="14" font-weight="600"> — Know Your Agent</text>
+  <circle cx="890" cy="24" r="4" fill="#00b894"/>
+  <text x="900" y="28" fill="#8b8fa8" font-size="11">Healthy</text>
+
+  <!-- Sidebar -->
+  <rect x="0" y="48" width="180" height="572" fill="#1a1d27"/>
+  <line x1="180" y1="48" x2="180" y2="620" stroke="#2e3348" stroke-width="1"/>
+
+  <text x="20" y="78" fill="#8b8fa8" font-size="9" letter-spacing="1.5">OVERVIEW</text>
+  <text x="20" y="102" fill="#8b8fa8" font-size="12">Dashboard</text>
+
+  <text x="20" y="132" fill="#8b8fa8" font-size="9" letter-spacing="1.5">PHASE 1</text>
+  <rect x="0" y="138" width="180" height="32" fill="#242836"/>
+  <rect x="178" y="138" width="2" height="32" fill="#6c5ce7"/>
+  <text x="20" y="159" fill="#e1e4ed" font-size="12">Agents</text>
+
+  <text x="20" y="192" fill="#8b8fa8" font-size="9" letter-spacing="1.5">PHASE 2</text>
+  <text x="20" y="216" fill="#8b8fa8" font-size="12">Delegations</text>
+  <text x="20" y="240" fill="#8b8fa8" font-size="12">Intent Tokens</text>
+
+  <text x="20" y="270" fill="#8b8fa8" font-size="9" letter-spacing="1.5">PHASE 3</text>
+  <text x="20" y="294" fill="#8b8fa8" font-size="12">Verify Action</text>
+
+  <text x="20" y="324" fill="#8b8fa8" font-size="9" letter-spacing="1.5">PHASE 4</text>
+  <text x="20" y="348" fill="#8b8fa8" font-size="12">Revocation</text>
+  <text x="20" y="372" fill="#8b8fa8" font-size="12">Step-Up</text>
+
+  <text x="20" y="402" fill="#8b8fa8" font-size="9" letter-spacing="1.5">PHASE 5</text>
+  <text x="20" y="426" fill="#8b8fa8" font-size="12">Audit Log</text>
+
+  <!-- Main Content -->
+  <!-- Register Form Card -->
+  <rect x="196" y="64" width="748" height="220" fill="#1a1d27" rx="8" stroke="#2e3348" stroke-width="1"/>
+  <text x="216" y="92" fill="#a29bfe" font-size="14" font-weight="600">Register New Agent</text>
+
+  <!-- Form row 1 -->
+  <text x="216" y="118" fill="#8b8fa8" font-size="9" letter-spacing="1">DISPLAY NAME</text>
+  <rect x="216" y="124" width="350" height="32" fill="#242836" rx="4" stroke="#2e3348" stroke-width="1"/>
+  <text x="228" y="145" fill="#e1e4ed" font-size="12">payment-bot</text>
+
+  <text x="582" y="118" fill="#8b8fa8" font-size="9" letter-spacing="1">PROVIDER</text>
+  <rect x="582" y="124" width="342" height="32" fill="#242836" rx="4" stroke="#2e3348" stroke-width="1"/>
+  <text x="594" y="145" fill="#e1e4ed" font-size="12">Anthropic</text>
+  <text x="894" y="145" fill="#8b8fa8" font-size="10">▼</text>
+
+  <!-- Form row 2 -->
+  <text x="216" y="176" fill="#8b8fa8" font-size="9" letter-spacing="1">CAPABILITIES (COMMA-SEPARATED)</text>
+  <rect x="216" y="182" width="350" height="32" fill="#242836" rx="4" stroke="#2e3348" stroke-width="1"/>
+  <text x="228" y="203" fill="#e1e4ed" font-size="12">payment.create, payment.refund</text>
+
+  <text x="582" y="176" fill="#8b8fa8" font-size="9" letter-spacing="1">ENVIRONMENT</text>
+  <rect x="582" y="182" width="342" height="32" fill="#242836" rx="4" stroke="#2e3348" stroke-width="1"/>
+  <text x="594" y="203" fill="#e1e4ed" font-size="12">Sandbox</text>
+  <text x="894" y="203" fill="#8b8fa8" font-size="10">▼</text>
+
+  <!-- Register Button -->
+  <rect x="216" y="232" width="130" height="32" fill="#6c5ce7" rx="4"/>
+  <text x="240" y="253" fill="white" font-size="12" font-weight="600">Register Agent</text>
+
+  <!-- Agents Table Card -->
+  <rect x="196" y="300" width="748" height="304" fill="#1a1d27" rx="8" stroke="#2e3348" stroke-width="1"/>
+  <text x="216" y="328" fill="#a29bfe" font-size="14" font-weight="600">Registered Agents</text>
+
+  <!-- Table header -->
+  <text x="216" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">NAME</text>
+  <text x="390" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">PROVIDER</text>
+  <text x="500" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">TRUST TIER</text>
+  <text x="610" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">STATUS</text>
+  <text x="700" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">ENV</text>
+  <text x="780" y="356" fill="#8b8fa8" font-size="9" letter-spacing="1">CAPABILITIES</text>
+  <line x1="216" y1="364" x2="924" y2="364" stroke="#2e3348" stroke-width="1"/>
+
+  <!-- Row 1 -->
+  <text x="216" y="386" fill="#e1e4ed" font-size="11">InvoicePaymentAgent</text>
+  <text x="390" y="386" fill="#e1e4ed" font-size="11">anthropic</text>
+  <rect x="500" y="374" width="56" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="508" y="387" fill="#00b894" font-size="10" font-weight="600">verified</text>
+  <rect x="610" y="374" width="48" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="620" y="387" fill="#00b894" font-size="10" font-weight="600">active</text>
+  <text x="700" y="386" fill="#8b8fa8" font-size="11">sandbox</text>
+  <text x="780" y="386" fill="#e1e4ed" font-size="10">payment.create, payment.refund</text>
+  <line x1="216" y1="396" x2="924" y2="396" stroke="#2e3348" stroke-width="1"/>
+
+  <!-- Row 2 -->
+  <text x="216" y="418" fill="#e1e4ed" font-size="11">CardholderAssistant</text>
+  <text x="390" y="418" fill="#e1e4ed" font-size="11">openai</text>
+  <rect x="500" y="406" width="56" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="508" y="419" fill="#00b894" font-size="10" font-weight="600">verified</text>
+  <rect x="610" y="406" width="48" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="620" y="419" fill="#00b894" font-size="10" font-weight="600">active</text>
+  <text x="700" y="418" fill="#8b8fa8" font-size="11">sandbox</text>
+  <text x="780" y="418" fill="#e1e4ed" font-size="10">payment.create, payment.status</text>
+  <line x1="216" y1="428" x2="924" y2="428" stroke="#2e3348" stroke-width="1"/>
+
+  <!-- Row 3 -->
+  <text x="216" y="450" fill="#e1e4ed" font-size="11">FraudReviewAgent</text>
+  <text x="390" y="450" fill="#e1e4ed" font-size="11">anthropic</text>
+  <rect x="500" y="438" width="58" height="18" fill="rgba(108,92,231,0.15)" rx="3"/>
+  <text x="507" y="451" fill="#a29bfe" font-size="10" font-weight="600">certified</text>
+  <rect x="610" y="438" width="48" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="620" y="451" fill="#00b894" font-size="10" font-weight="600">active</text>
+  <text x="700" y="450" fill="#8b8fa8" font-size="11">sandbox</text>
+  <text x="780" y="450" fill="#e1e4ed" font-size="10">payment.*, fraud.review</text>
+  <line x1="216" y1="460" x2="924" y2="460" stroke="#2e3348" stroke-width="1"/>
+
+  <!-- Row 4 -->
+  <text x="216" y="482" fill="#e1e4ed" font-size="11">RevokedAgent</text>
+  <text x="390" y="482" fill="#e1e4ed" font-size="11">custom</text>
+  <rect x="500" y="470" width="56" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="508" y="483" fill="#00b894" font-size="10" font-weight="600">verified</text>
+  <rect x="610" y="470" width="56" height="18" fill="rgba(231,76,60,0.15)" rx="3"/>
+  <text x="617" y="483" fill="#e74c3c" font-size="10" font-weight="600">revoked</text>
+  <text x="700" y="482" fill="#8b8fa8" font-size="11">sandbox</text>
+  <text x="780" y="482" fill="#e1e4ed" font-size="10">payment.create</text>
+  <line x1="216" y1="492" x2="924" y2="492" stroke="#2e3348" stroke-width="1"/>
+
+  <!-- Row 5 (user-registered) -->
+  <text x="216" y="514" fill="#e1e4ed" font-size="11">payment-bot</text>
+  <text x="390" y="514" fill="#e1e4ed" font-size="11">anthropic</text>
+  <rect x="500" y="502" width="66" height="18" fill="rgba(243,156,18,0.15)" rx="3"/>
+  <text x="506" y="515" fill="#f39c12" font-size="10" font-weight="600">unverified</text>
+  <rect x="610" y="502" width="48" height="18" fill="rgba(0,184,148,0.15)" rx="3"/>
+  <text x="620" y="515" fill="#00b894" font-size="10" font-weight="600">active</text>
+  <text x="700" y="514" fill="#8b8fa8" font-size="11">sandbox</text>
+  <text x="780" y="514" fill="#e1e4ed" font-size="10">payment.create, payment.refund</text>
+</svg>
