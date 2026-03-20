@@ -210,6 +210,14 @@ All endpoints require `X-Tenant-ID` header (or `Authorization: Bearer <api-key>`
 | `GET` | `/v1/audit/verify-chain` | Verify audit chain integrity |
 | `GET` | `/v1/audit/decisions` | Query by decision type |
 
+## Mastercard MPGS — Agentic Payments
+
+KYA integrates with Mastercard Payment Gateway Services to authorize AI agent-initiated payments in real time. See the full guide:
+
+**[KYA × Mastercard MPGS — Agentic Payments](docs/KYA_Agentic_Payments_Mastercard.md)**
+
+Covers real-world scenarios (invoice payments, cardholder assistants, agent-to-agent orchestration), the MPGS pre-auth integration, step-up flow, risk scoring, denial codes, and a production rollout plan.
+
 ## Sandbox / MPGS Integration
 
 KYA includes a Mastercard Payment Gateway Services (MPGS) sandbox with pre-seeded test data.
